@@ -414,6 +414,7 @@ function makeAudio(src) {
 
 const SFX = {
   start:     makeAudio('sounds/start.mp3'),
+  tap:       makeAudio('sounds/tap.mp3'),
   shake:     makeAudio('sounds/shake.mp3'),
   draw:      makeAudio('sounds/draw.mp3'),
   complete:  makeAudio('sounds/complete.mp3'),
@@ -527,6 +528,7 @@ async function nextNum() {
   if (state.roundDone || isDrawing) return;
   isDrawing = true;
   const isFirst = state.currentIndex === 0;
+  if (!isFirst) playSound('tap');
   // API 호출 즉시 시작 (애니메이션과 완전 병렬)
   const apiPromise = api('nextNumber', { gameId: state.gameId });
 
@@ -544,7 +546,6 @@ async function nextNum() {
     switchToBagDone(data.current);
   } else {
     // 두근두근 카드 보여주면서 API 기다리기
-    playSound('shake');
     showCardWaiting();
     const data = await apiPromise;
     playSound('draw');
