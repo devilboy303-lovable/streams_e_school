@@ -544,6 +544,7 @@ async function nextNum() {
     switchToBagDone(data.current);
   } else {
     // 두근두근 카드 보여주면서 API 기다리기
+    playSound('shake');
     showCardWaiting();
     const data = await apiPromise;
     playSound('draw');
