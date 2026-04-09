@@ -123,10 +123,17 @@ h1,h2,h3{font-family:'Nanum Square',sans-serif;}
 .revealed-track{
   display:grid;
   grid-template-columns:repeat(10,1fr);
+  grid-template-rows:repeat(2,1fr);
   gap:4px;
   margin-top:14px;padding:10px;
   background:rgba(0,0,0,0.04);border-radius:var(--radius);
-  border:2px dashed rgba(0,0,0,0.17);min-height:96px;
+  border:2px dashed rgba(0,0,0,0.17);
+}
+/* 빈 자리 플레이스홀더 */
+.num-chip-empty{
+  aspect-ratio:1;width:100%;
+  border:2px dashed rgba(0,0,0,0.1);
+  border-radius:5px;background:transparent;
 }
 .num-chip{display:inline-flex;align-items:center;justify-content:center;
   aspect-ratio:1;width:100%;background:var(--yellow);border:2px solid var(--ink);
@@ -409,7 +416,11 @@ let audioUnlocked = false;
 
 // 파일이 없어도 오류 없이 동작하도록 안전하게 생성
 function makeAudio(src) {
-  try { return new Audio(src); } catch(e) { return null; }
+  try {
+    const a = new Audio(src);
+    a.preload = 'auto'; // 미리 로드해서 첫 재생 딜레이 제거
+    return a;
+  } catch(e) { return null; }
 }
 
 const SFX = {
@@ -743,6 +754,7 @@ function renderRevealedNumbers(latest, isInit=false) {
     return;
   }
   track.innerHTML='';
+  // 실제 칩
   state.revealed.forEach((n,i) => {
     const c = document.createElement('div');
     const isStar = (n==='★'||n==='*');
@@ -750,6 +762,12 @@ function renderRevealedNumbers(latest, isInit=false) {
     c.textContent = n;
     track.appendChild(c);
   });
+  // 나머지 빈 자리 (항상 20칸 고정)
+  for (let i=state.revealed.length; i<20; i++) {
+    const e = document.createElement('div');
+    e.className = 'num-chip-empty';
+    track.appendChild(e);
+  }
   document.getElementById('progressText').textContent =
     `${state.currentIndex}번째 공개 / 전체 ${state.total}장`;
 }
