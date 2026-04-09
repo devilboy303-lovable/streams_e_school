@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스트림즈 🎮</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --yellow:  #FFD600;
+  --red:     #E8192C;
+  --blue:    #1565C0;
+  --green:   #2E7D32;
+  --orange:  #E65100;
+  --white:   #FFFDE7;
+  --black:   #1A1A1A;
+  --ink:     #0D0D0D;
+  --panel-bg:#FFF9C4;
+  --shadow:  4px 4px 0px var(--ink);
+  --shadow-lg: 6px 6px 0px var(--ink);
+  --radius:  8px;
+  --border:  3px solid var(--ink);
+}
+
+body {
+  font-family: 'Nanum Gothic', sans-serif;
+  background: var(--yellow);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* 만화 도트 패턴 배경 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+h1, h2, h3, .display {
+  font-family: 'Black Han Sans', sans-serif;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+#app {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--red);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 16px;
+}
+
+.header-logo {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 2rem;
+  color: var(--white);
+  text-shadow: 3px 3px 0 var(--ink);
+  letter-spacing: 2px;
+}
+
+.header-logo span {
+  color: var(--yellow);
+}
+
+.header-nav {
+  display: flex;
+  gap: 8px;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1rem;
+  padding: 10px 20px;
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+  box-shadow: var(--shadow);
+  letter-spacing: 1px;
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn-yellow { background: var(--yellow); color: var(--ink); }
+.btn-red    { background: var(--red);    color: white; }
+.btn-blue   { background: var(--blue);   color: white; }
+.btn-green  { background: var(--green);  color: white; }
+.btn-white  { background: var(--white);  color: var(--ink); }
+.btn-orange { background: var(--orange); color: white; }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.btn-lg {
+  font-size: 1.4rem;
+  padding: 14px 32px;
+}
+
+/* ============================================================
+   SCREENS (pages)
+   ============================================================ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ============================================================
+   HOME SCREEN
+   ============================================================ */
+.home-hero {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.home-title {
+  font-size: clamp(3rem, 10vw, 6rem);
+  color: var(--ink);
+  text-shadow: 5px 5px 0 var(--red), 8px 8px 0 var(--blue);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.home-sub {
+  font-size: 1.1rem;
+  color: var(--ink);
+  opacity: 0.7;
+  margin-bottom: 40px;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.round-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 16px;
+  justify-content: center;
+}
+
+.round-select-wrap label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1rem;
+}
+
+.round-select-wrap select {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.1rem;
+  padding: 6px 12px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--yellow);
+  cursor: pointer;
+}
+
+/* ============================================================
+   GAME SCREEN
+   ============================================================ */
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .game-layout { grid-template-columns: 1fr; }
+}
+
+/* 현재 숫자 표시 */
+.number-stage {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.number-stage::before {
+  content: '★';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 6rem;
+  opacity: 0.05;
+}
+
+.round-badge {
+  display: inline-block;
+  background: var(--red);
+  color: white;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.85rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.current-number {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(6rem, 20vw, 12rem);
+  color: var(--ink);
+  line-height: 1;
+  transition: all 0.2s;
+  text-shadow: 6px 6px 0 var(--red);
+}
+
+.current-number.pop {
+  animation: pop 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: var(--ink);
+  opacity: 0.6;
+  margin-top: 8px;
+}
+
+/* 공개된 숫자 열차 */
+.revealed-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(0,0,0,0.04);
+  border-radius: var(--radius);
+  border: 2px dashed rgba(0,0,0,0.2);
+  min-height: 64px;
+}
+
+.num-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.1rem;
+  box-shadow: 2px 2px 0 var(--ink);
+  animation: chipIn 0.25s ease;
+}
+
+.num-chip.latest {
+  background: var(--red);
+  color: white;
+  transform: scale(1.1);
+}
+
+@keyframes chipIn {
+  from { transform: scale(0) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* 게임 컨트롤 패널 */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.panel-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  opacity: 0.5;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* 라운드 도트 */
+.round-dots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.round-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.8rem;
+  background: var(--white);
+  transition: all 0.2s;
+}
+
+.round-dot.done    { background: var(--green); color: white; }
+.round-dot.current { background: var(--red);   color: white; box-shadow: 0 0 0 3px rgba(232,25,44,0.3); }
+
+/* 제어 버튼 세트 */
+.control-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ============================================================
+   HISTORY SCREEN
+   ============================================================ */
+.history-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .history-layout { grid-template-columns: 1fr; }
+}
+
+.date-list {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.date-item {
+  padding: 12px 16px;
+  border-bottom: 2px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.95rem;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-item:hover   { background: var(--yellow); }
+.date-item.active  { background: var(--red); color: white; }
+
+.date-count {
+  background: var(--ink);
+  color: white;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.date-item.active .date-count { background: white; color: var(--ink); }
+
+.history-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.history-time {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.round-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.round-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.round-label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.8rem;
+  width: 56px;
+  flex-shrink: 0;
+  color: var(--red);
+}
+
+.mini-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mini-chip {
+  width: 28px;
+  height: 28px;
+  background: var(--yellow);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+/* ============================================================
+   MODAL (라운드 완료 / 게임 완료)
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal-box {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 10px 10px 0 var(--ink);
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes modalIn {
+  from { transform: scale(0.7) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-icon {
+  font-size: 4rem;
+  margin-bottom: 8px;
+}
+
+.modal-title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.modal-sub {
+  font-size: 1rem;
+  opacity: 0.6;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: white;
+  font-family: 'Black Han Sans', sans-serif;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-size: 1rem;
+  z-index: 200;
+  transition: transform 0.3s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  opacity: 0.4;
+}
+
+.empty-icon { font-size: 4rem; margin-bottom: 12px; }
+.empty-text { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,214,0,0.7);
+  z-index: 150;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.2rem;
+}
+
+.loading-overlay.show { display: flex; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ========== HEADER ========== -->
+  <header class="header">
+    <div class="header-logo">스트<span>림</span>즈</div>
+    <nav class="header-nav">
+      <button class="btn btn-white" onclick="showScreen('home')">🏠 홈</button>
+      <button class="btn btn-white" onclick="showScreen('history'); loadHistory()">📋 기록</button>
+    </nav>
+  </header>
+
+  <!-- ========== HOME SCREEN ========== -->
+  <div id="screen-home" class="screen active">
+    <div class="home-hero">
+      <h1 class="home-title">STREAMS</h1>
+      <p class="home-sub">오름차순 빙고 게임 · 교사용 진행 도구</p>
+
+      <div class="home-actions">
+        <div class="round-select-wrap">
+          <label>라운드 수</label>
+          <select id="roundCount">
+            <option value="3">3 라운드</option>
+            <option value="5" selected>5 라운드</option>
+            <option value="7">7 라운드</option>
+            <option value="10">10 라운드</option>
+          </select>
+        </div>
+        <button class="btn btn-red btn-lg" onclick="startNewGame()">🎲 새 게임 시작</button>
+        <button class="btn btn-blue" onclick="resumeGame()" id="btnResume" style="display:none">▶ 이어하기</button>
+      </div>
+
+      <!-- 게임 소개 -->
+      <div style="margin-top:48px; max-width:560px; margin-left:auto; margin-right:auto;">
+        <div style="background:var(--white); border:var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:24px; text-align:left;">
+          <h3 style="font-size:1.1rem; margin-bottom:12px;">📖 게임 방법</h3>
+          <p style="line-height:1.8; font-size:0.95rem; opacity:0.8;">
+            1. 교사가 숫자를 하나씩 공개합니다.<br>
+            2. 학생들은 공개된 숫자를 8칸 중 원하는 칸에 적습니다.<br>
+            3. 한 번 쓴 숫자는 지울 수 없습니다.<br>
+            4. 24개의 숫자가 모두 공개되면 라운드 종료.<br>
+            5. <strong>오름차순</strong>으로 가장 많이 연결한 사람이 승리!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== GAME SCREEN ========== -->
+  <div id="screen-game" class="screen">
+    <div class="game-layout">
+
+      <!-- 왼쪽: 숫자 스테이지 -->
+      <div>
+        <div class="number-stage">
+          <div class="round-badge" id="roundBadge">1 / 5 라운드</div>
+
+          <div style="margin: 8px 0 4px;">
+            <span style="font-size:0.85rem; opacity:0.5;" id="progressText">대기 중...</span>
+          </div>
+
+          <div class="current-number" id="currentNumber">?</div>
+
+          <div class="revealed-track" id="revealedTrack">
+            <div style="opacity:0.3; font-size:0.9rem; margin:auto;">첫 번째 숫자를 뽑아보세요!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 컨트롤 패널 -->
+      <div class="control-panel">
+
+        <!-- 라운드 현황 -->
+        <div class="panel-card">
+          <div class="panel-title">라운드</div>
+          <div class="round-dots" id="roundDots"></div>
+        </div>
+
+        <!-- 조작 버튼 -->
+        <div class="panel-card">
+          <div class="panel-title">조작</div>
+          <div class="control-btns">
+            <button class="btn btn-red btn-lg" id="btnNext" onclick="nextNum()">
+              🎲 다음 숫자
+            </button>
+            <button class="btn btn-blue" id="btnNextRound" onclick="goNextRound()" disabled>
+              ➡ 다음 라운드
+            </button>
+            <button class="btn btn-white" onclick="confirmEndGame()">
+              🏁 게임 종료
+            </button>
+          </div>
+        </div>
+
+        <!-- 현재 라운드 정보 -->
+        <div class="panel-card">
+          <div class="panel-title">공개된 숫자</div>
+          <div id="countInfo" style="font-family:'Black Han Sans',sans-serif; font-size:1.4rem; color:var(--red);">
+            0 / 24
+          </div>
+          <div style="font-size:0.8rem; opacity:0.5; margin-top:4px;">
+            남은 숫자: <span id="remainCount">24</span>개
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== HISTORY SCREEN ========== -->
+  <div id="screen-history" class="screen">
+    <h2 style="font-size:1.5rem; margin-bottom:14px;">📋 게임 기록</h2>
+    <div class="history-layout">
+      <div class="date-list" id="dateList">
+        <div class="empty"><div class="empty-icon">📅</div><div class="empty-text">기록 없음</div></div>
+      </div>
+      <div id="historyCards">
+        <div class="empty"><div class="empty-icon">👈</div><div class="empty-text">날짜를 선택하세요</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== 라운드 완료 모달 ========== -->
+<div class="modal-overlay" id="modalRound">
+  <div class="modal-box">
+    <div class="modal-icon">🎉</div>
+    <h2 class="modal-title" id="modalRoundTitle">라운드 완료!</h2>
+    <p class="modal-sub" id="modalRoundSub">학생들이 채점을 완료하면 다음 라운드로 이동하세요.</p>
+    <div class="modal-actions">
+      <button class="btn btn-blue btn-lg" id="btnModalNext" onclick="confirmNextRound()">다음 라운드 ➡</button>
+      <button class="btn btn-white" onclick="closeModal('modalRound')">잠시 대기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 게임 종료 모달 ========== -->
+<div class="modal-overlay" id="modalEnd">
+  <div class="modal-box">
+    <div class="modal-icon">🏆</div>
+    <h2 class="modal-title">게임 종료!</h2>
+    <p class="modal-sub">모든 라운드가 완료되었습니다. 수고하셨습니다!</p>
+    <div class="modal-actions">
+      <button class="btn btn-red btn-lg" onclick="finishGame()">✅ 기록 저장 후 홈으로</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 게임 종료 확인 모달 ========== -->
+<div class="modal-overlay" id="modalConfirmEnd">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <h2 class="modal-title">게임을 종료할까요?</h2>
+    <p class="modal-sub">현재까지의 기록이 저장됩니다.</p>
+    <div class="modal-actions">
+      <button class="btn btn-red" onclick="finishGame()">종료</button>
+      <button class="btn btn-white" onclick="closeModal('modalConfirmEnd')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOADING ========== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingText">로딩 중...</div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — GAS Web App URL로 교체하세요
+// ============================================================
+const GAS_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+// 예: 'https://script.google.com/macros/s/XXXXXXXX/exec'
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  gameId: null,
+  currentRound: 1,
+  totalRounds: 5,
+  currentIndex: 0,
+  revealed: [],
+  total: 24,
+  roundDone: false,
+  status: 'idle' // idle | playing | finished
+};
+
+// ============================================================
+// API
+// ============================================================
+async function api(action, params = {}) {
+  const url = GAS_URL + '?action=' + action + '&' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+// ============================================================
+// LOADING & TOAST
+// ============================================================
+function showLoading(text = '처리 중...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// SCREEN
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function checkResume() {
+  const saved = localStorage.getItem('streams_gameId');
+  if (saved) {
+    document.getElementById('btnResume').style.display = 'block';
+  }
+}
+
+async function resumeGame() {
+  const gameId = localStorage.getItem('streams_gameId');
+  if (!gameId) return;
+  showLoading('게임 불러오는 중...');
+  try {
+    const data = await api('getGame', { gameId });
+    applyGameState(data);
+    showScreen('game');
+    toast('이어하기 완료!');
+  } catch (e) {
+    localStorage.removeItem('streams_gameId');
+    toast('저장된 게임을 불러올 수 없습니다.');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// NEW GAME
+// ============================================================
+async function startNewGame() {
+  const rounds = document.getElementById('roundCount').value;
+  showLoading('게임 생성 중...');
+  try {
+    const data = await api('newGame', { rounds });
+    state.gameId = data.gameId;
+    state.currentRound = 1;
+    state.totalRounds = parseInt(rounds);
+    state.currentIndex = 0;
+    state.revealed = [];
+    state.roundDone = false;
+    state.status = 'playing';
+    state.total = 24;
+    localStorage.setItem('streams_gameId', data.gameId);
+    renderGameUI();
+    showScreen('game');
+    toast('새 게임 시작!');
+  } catch (e) {
+    toast('오류: ' + e.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// NEXT NUMBER
+// ============================================================
+async function nextNum() {
+  if (state.roundDone) return;
+  try {
+    const data = await api('nextNumber', { gameId: state.gameId });
+    state.revealed = data.revealed;
+    state.currentIndex = data.index;
+    state.roundDone = data.roundDone;
+    state.total = data.total;
+    renderRevealedNumbers(data.current);
+    updateCountInfo();
+    if (data.roundDone) {
+      document.getElementById('btnNext').disabled = true;
+      document.getElementById('btnNextRound').disabled = false;
+      // 마지막 라운드면 게임 종료 모달
+      if (state.currentRound >= state.totalRounds) {
+        setTimeout(() => showModal('modalEnd'), 800);
+      } else {
+        setTimeout(() => showModal('modalRound'), 800);
+      }
+    }
+  } catch (e) {
+    toast('오류: ' + e.message);
+  }
+}
+
+// ============================================================
+// NEXT ROUND
+// ============================================================
+function goNextRound() {
+  if (state.currentRound >= state.totalRounds) {
+    showModal('modalEnd');
+  } else {
+    showModal('modalRound');
+  }
+}
+
+async function confirmNextRound() {
+  closeModal('modalRound');
+  showLoading('다음 라운드 준비 중...');
+  try {
+    const data = await api('endGame', { gameId: state.gameId, action: 'nextRound' });
+    state.currentRound = data.gameData.currentRound;
+    state.currentIndex = 0;
+    state.revealed = [];
+    state.roundDone = false;
+    state.total = 24;
+    renderGameUI();
+    toast(`${state.currentRound}라운드 시작!`);
+  } catch (e) {
+    toast('오류: ' + e.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+function confirmEndGame() {
+  showModal('modalConfirmEnd');
+}
+
+async function finishGame() {
+  closeModal('modalEnd');
+  closeModal('modalConfirmEnd');
+  showLoading('기록 저장 중...');
+  try {
+    await api('endGame', { gameId: state.gameId, action: 'finish' });
+    localStorage.removeItem('streams_gameId');
+    state.status = 'idle';
+    state.gameId = null;
+    toast('기록이 저장되었습니다 ✅');
+    showScreen('home');
+    checkResume();
+  } catch (e) {
+    toast('오류: ' + e.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function applyGameState(data) {
+  state.gameId = data.gameData.gameId;
+  state.currentRound = data.gameData.currentRound;
+  state.totalRounds = data.gameData.rounds;
+  state.currentIndex = data.gameData.currentIndex;
+  state.revealed = data.revealed || [];
+  state.roundDone = data.roundDone;
+  state.total = data.total;
+  state.status = data.gameData.status;
+  renderGameUI();
+  if (state.revealed.length > 0) renderRevealedNumbers(null);
+}
+
+function renderGameUI() {
+  // 라운드 배지
+  document.getElementById('roundBadge').textContent =
+    `${state.currentRound} / ${state.totalRounds} 라운드`;
+
+  // 현재 숫자 초기화
+  document.getElementById('currentNumber').textContent = state.revealed.length > 0
+    ? state.revealed[state.revealed.length - 1] : '?';
+
+  // 공개 트랙 초기화
+  renderRevealedNumbers(null, true);
+
+  // 라운드 도트
+  const dotsEl = document.getElementById('roundDots');
+  dotsEl.innerHTML = '';
+  for (let i = 1; i <= state.totalRounds; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'round-dot' +
+      (i < state.currentRound ? ' done' : i === state.currentRound ? ' current' : '');
+    dot.textContent = i;
+    dotsEl.appendChild(dot);
+  }
+
+  // 버튼 상태
+  document.getElementById('btnNext').disabled = state.roundDone;
+  document.getElementById('btnNextRound').disabled = !state.roundDone || state.currentRound >= state.totalRounds;
+
+  updateCountInfo();
+}
+
+function renderRevealedNumbers(latest, isInit = false) {
+  const track = document.getElementById('revealedTrack');
+  const numEl = document.getElementById('currentNumber');
+
+  if (state.revealed.length === 0) {
+    track.innerHTML = '<div style="opacity:0.3;font-size:0.9rem;margin:auto;">첫 번째 숫자를 뽑아보세요!</div>';
+    numEl.textContent = '?';
+    return;
+  }
+
+  // 숫자 표시
+  if (latest !== null) {
+    numEl.textContent = latest;
+    numEl.classList.remove('pop');
+    void numEl.offsetWidth;
+    numEl.classList.add('pop');
+  }
+
+  // 칩 목록
+  track.innerHTML = '';
+  state.revealed.forEach((n, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'num-chip' + (i === state.revealed.length - 1 && !isInit ? ' latest' : '');
+    chip.textContent = n;
+    track.appendChild(chip);
+  });
+
+  document.getElementById('progressText').textContent =
+    `${state.currentIndex}번째 / ${state.total}개`;
+}
+
+function updateCountInfo() {
+  document.getElementById('countInfo').textContent = `${state.currentIndex} / ${state.total}`;
+  document.getElementById('remainCount').textContent = state.total - state.currentIndex;
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+async function loadHistory() {
+  showLoading('기록 불러오는 중...');
+  try {
+    const data = await api('getHistory', {});
+    renderHistory(data.history);
+  } catch (e) {
+    toast('오류: ' + e.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderHistory(history) {
+  const dateList = document.getElementById('dateList');
+  const cardsEl = document.getElementById('historyCards');
+
+  if (!history || history.length === 0) {
+    dateList.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">기록 없음</div></div>';
+    cardsEl.innerHTML = '';
+    return;
+  }
+
+  // 날짜별 그룹
+  const groups = {};
+  history.forEach(h => {
+    if (!groups[h.date]) groups[h.date] = [];
+    groups[h.date].push(h);
+  });
+
+  const dates = Object.keys(groups).sort().reverse();
+
+  // 날짜 목록
+  dateList.innerHTML = dates.map((d, i) =>
+    `<div class="date-item ${i === 0 ? 'active' : ''}" onclick="selectDate('${d}', this)">
+      <span>📅 ${d}</span>
+      <span class="date-count">${groups[d].length}</span>
+    </div>`
+  ).join('');
+
+  // 첫 번째 날짜 카드
+  window._historyGroups = groups;
+  renderDateCards(groups[dates[0]]);
+}
+
+function selectDate(date, el) {
+  document.querySelectorAll('.date-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  renderDateCards(window._historyGroups[date]);
+}
+
+function renderDateCards(games) {
+  const el = document.getElementById('historyCards');
+  el.innerHTML = games.map(g => {
+    const time = g.completedAt ? new Date(g.completedAt).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '';
+    const rounds = Array.isArray(g.summary) ? g.summary : [];
+    return `
+      <div class="history-card">
+        <div class="history-card-header">
+          <span style="font-family:'Black Han Sans',sans-serif;">${g.rounds}라운드 게임</span>
+          <span class="history-time">${time}</span>
+        </div>
+        <div class="round-summary">
+          ${rounds.map(r => `
+            <div class="round-row">
+              <span class="round-label">${r.round}R</span>
+              <div class="mini-chips">
+                ${(r.numbers || []).map(n => `<div class="mini-chip">${n}</div>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// 라운드 완료 모달 텍스트 동적 업데이트
+function updateRoundModal() {
+  const isLast = state.currentRound >= state.totalRounds;
+  document.getElementById('modalRoundTitle').textContent = isLast ? '마지막 라운드 완료!' : `${state.currentRound}라운드 완료!`;
+  document.getElementById('btnModalNext').style.display = isLast ? 'none' : 'inline-block';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+checkResume();
+</script>
+</body>
+</html>
