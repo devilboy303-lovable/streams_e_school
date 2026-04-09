@@ -249,7 +249,6 @@ h1,h2,h3{font-family:'Nanum Square',sans-serif;}
       </div>
 
       <button class="btn btn-red btn-lg" onclick="startNewGame()">🎲 새 게임 시작</button>
-      <button class="btn btn-blue" onclick="resumeGame()" id="btnResume" style="display:none">▶ 이어하기</button>
     </div>
     <div style="margin-top:36px;max-width:520px;margin-left:auto;margin-right:auto;">
       <div style="background:var(--white);border:var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;text-align:left;">
@@ -499,20 +498,7 @@ function goHome() { showScreen('home'); checkResume(); }
 // ============================================================
 // HOME
 // ============================================================
-function checkResume() {
-  document.getElementById('btnResume').style.display =
-    localStorage.getItem('streams_gameId') ? 'block' : 'none';
-}
-async function resumeGame() {
-  const gameId = localStorage.getItem('streams_gameId');
-  if (!gameId) return;
-  showLoading('게임 불러오는 중...');
-  try {
-    const data = await api('getGame', { gameId });
-    applyGameState(data); showScreen('game'); toast('이어하기 완료!');
-  } catch(e) { localStorage.removeItem('streams_gameId'); toast('저장된 게임을 불러올 수 없습니다.'); }
-  finally { hideLoading(); }
-}
+function checkResume() {} // 이어하기 미사용
 
 // ============================================================
 // NEW GAME
@@ -552,6 +538,7 @@ async function nextNum() {
     const data = await apiPromise;
     // 응답 오는 순간 흔들기 멈추고 바로 팡
     stopBagShake();
+    playSound('draw');
     await animateBagPop(data.current);
     applyDrawResult(data);
     switchToBagDone(data.current);
