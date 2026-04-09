@@ -403,19 +403,44 @@ const SPECIAL_ROWS = new Set([6, 12, 17, 20]);
 // ============================================================
 // 효과음
 // ============================================================
+// ============================================================
+// 효과음 — 브라우저 자동재생 정책 대응
+// ============================================================
+let audioUnlocked = false;
+
+// 파일이 없어도 오류 없이 동작하도록 안전하게 생성
+function makeAudio(src) {
+  try { return new Audio(src); } catch(e) { return null; }
+}
+
 const SFX = {
-  start:     new Audio('sounds/start.mp3'),
-  shake:     new Audio('sounds/shake.mp3'),
-  draw:      new Audio('sounds/draw.mp3'),   // 카드 뽑혀서 표시될 때
-  complete:  new Audio('sounds/complete.mp3'),
-  nextRound: new Audio('sounds/nextround.mp3'),
+  start:     makeAudio('sounds/start.mp3'),
+  shake:     makeAudio('sounds/shake.mp3'),
+  draw:      makeAudio('sounds/draw.mp3'),
+  complete:  makeAudio('sounds/complete.mp3'),
+  nextRound: makeAudio('sounds/nextround.mp3'),
 };
-// 재생 실패 시 조용히 무시
+
+// 첫 터치/클릭 시 오디오 컨텍스트 해제 (브라우저 정책 우회)
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // 무음 재생으로 오디오 컨텍스트 활성화
+  Object.values(SFX).forEach(s => {
+    if (!s) return;
+    s.volume = 0;
+    s.play().then(() => { s.pause(); s.currentTime = 0; s.volume = 1; }).catch(()=>{});
+  });
+}
+document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
+
 function playSound(key) {
   try {
     const s = SFX[key];
     if (!s) return;
     s.currentTime = 0;
+    s.volume = 1;
     s.play().catch(()=>{});
   } catch(e) {}
 }
