@@ -430,6 +430,7 @@ const SFX = {
   draw:      makeAudio('sounds/draw.mp3'),
   complete:  makeAudio('sounds/complete.mp3'),
   nextRound: makeAudio('sounds/nextround.mp3'),
+  finish:    makeAudio('sounds/finish.mp3'),
 };
 
 // 첫 터치/클릭 시 오디오 컨텍스트 해제 (브라우저 정책 우회)
@@ -703,8 +704,9 @@ async function finishGame() {
     await api('endGame', { gameId:state.gameId, action:'finish' });
     localStorage.removeItem('streams_gameId');
     state.status='idle'; state.gameId=null;
-    toast('기록이 저장되었습니다 ✅');
     showScreen('home'); checkResume();
+    playSound('finish');
+    toast('기록이 저장되었습니다 ✅');
   } catch(e) { toast('오류: '+e.message); }
   finally { hideLoading(); }
 }
