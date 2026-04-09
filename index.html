@@ -404,11 +404,10 @@ const SPECIAL_ROWS = new Set([6, 12, 17, 20]);
 // 효과음
 // ============================================================
 const SFX = {
-  start:  new Audio('sounds/start.mp3'),
-  tap:    new Audio('sounds/tap.mp3'),
-  shake:  new Audio('sounds/shake.mp3'),
-  card:   new Audio('sounds/card.mp3'),
-  complete: new Audio('sounds/complete.mp3'),
+  start:     new Audio('sounds/start.mp3'),
+  shake:     new Audio('sounds/shake.mp3'),
+  draw:      new Audio('sounds/draw.mp3'),   // 카드 뽑혀서 표시될 때
+  complete:  new Audio('sounds/complete.mp3'),
   nextRound: new Audio('sounds/nextround.mp3'),
 };
 // 재생 실패 시 조용히 무시
@@ -516,8 +515,6 @@ async function startNewGame() {
 async function nextNum() {
   if (state.roundDone || isDrawing) return;
   isDrawing = true;
-  playSound('tap');
-
   const isFirst = state.currentIndex === 0;
   // API 호출 즉시 시작 (애니메이션과 완전 병렬)
   const apiPromise = api('nextNumber', { gameId: state.gameId });
@@ -537,7 +534,7 @@ async function nextNum() {
     // 두근두근 카드 보여주면서 API 기다리기
     showCardWaiting();
     const data = await apiPromise;
-    playSound('card');
+    playSound('draw');
     renderCardFlipped(data.current, data.index, data.total);
     applyDrawResult(data);
   }
