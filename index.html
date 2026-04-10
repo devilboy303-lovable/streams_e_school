@@ -219,6 +219,7 @@ h1,h2,h3{font-family:'Nanum Square',sans-serif;}
   <nav class="header-nav">
     <button class="btn btn-white" onclick="goHome()" style="font-size:0.88rem;padding:7px 13px;">🏠 홈</button>
     <button class="btn btn-white" onclick="showScreen('history');loadHistory();" style="font-size:0.88rem;padding:7px 13px;">📋 기록</button>
+    <button class="btn btn-white" id="btnSound" onclick="toggleSound()" style="font-size:0.88rem;padding:7px 13px;" title="효과음 켜기/끄기">🔊</button>
   </nav>
 </header>
 
@@ -440,6 +441,23 @@ const SPECIAL_ROWS = new Set([6, 12, 17, 20]);
 // 효과음 — 브라우저 자동재생 정책 대응
 // ============================================================
 let audioUnlocked = false;
+let soundEnabled = localStorage.getItem('streams_sound') !== 'off'; // 기본 ON
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('streams_sound', soundEnabled ? 'on' : 'off');
+  updateSoundBtn();
+  // 켤 때 짧게 소리로 확인
+  if (soundEnabled) playSound('tap');
+}
+
+function updateSoundBtn() {
+  const btn = document.getElementById('btnSound');
+  if (!btn) return;
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+  btn.title = soundEnabled ? '효과음 끄기' : '효과음 켜기';
+  btn.style.opacity = soundEnabled ? '1' : '0.55';
+}
 
 // 파일이 없어도 오류 없이 동작하도록 안전하게 생성
 function makeAudio(src) {
@@ -475,6 +493,7 @@ document.addEventListener('click', unlockAudio, { once: true });
 document.addEventListener('touchstart', unlockAudio, { once: true });
 
 function playSound(key) {
+  if (!soundEnabled) return;
   try {
     const s = SFX[key];
     if (!s) return;
@@ -896,9 +915,10 @@ function printSheet() {
 // ============================================================
 // INIT
 // ============================================================
-updateGradeOptions(); // 초기 학년/반 세팅
+updateGradeOptions();
 renderScoreTable();
 checkResume();
+updateSoundBtn(); // 저장된 음소거 상태 반영
 </script>
 </body>
 </html>
