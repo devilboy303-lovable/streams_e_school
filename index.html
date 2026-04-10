@@ -850,8 +850,9 @@ function renderHistory(history) {
   history.forEach(h=>{ if(!groups[h.date]) groups[h.date]=[]; groups[h.date].push(h); });
   const dates=Object.keys(groups).sort().reverse();
   dl.innerHTML=dates.map((d,i)=>{
-    const dt = new Date(d);
-    const label = `${dt.getMonth()+1}월 ${dt.getDate()}일`;
+    // YYYY-MM-DD 직접 파싱 (UTC 오프셋 문제 없음)
+    const parts = d ? d.split('-') : [];
+    const label = parts.length===3 ? `${parseInt(parts[1])}월 ${parseInt(parts[2])}일` : d;
     return `<div class="date-item ${i===0?'active':''}" onclick="selectDate('${d}',this)">
        <span>📅 ${label}</span><span class="date-count">${groups[d].length}</span>
      </div>`;
@@ -864,10 +865,23 @@ function selectDate(date,el) {
 }
 function renderDateCards(games) {
   document.getElementById('historyCards').innerHTML=games.map(g=>{
-    const dt = g.completedAt ? new Date(g.completedAt) : null;
-    const dateStr = dt ? `${dt.getMonth()+1}월 ${dt.getDate()}일` : '';
-    const timeStr = dt ? dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '';
-    const classInfo = g.classInfo || '학급 미입력';
+    // completedAt: ISO 문자열 → 한국시간 변환
+    let timeStr = '';
+    if (g.completedAt) {
+      try {
+        const dt = new Date(g.completedAt);
+        if (!isNaN(dt.getTime())) {
+          timeStr = dt.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Seoul'});
+        }
+      } catch(e) {}
+    }
+    // date: YYYY-MM-DD 직접 파싱
+    let dateStr = '';
+    if (g.date) {
+      const parts = g.date.split('-');
+      if (parts.length===3) dateStr = `${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
+    }
+    const classInfo = (g.classInfo && g.classInfo.trim()) ? g.classInfo : '학급 미입력';
     const rounds = Array.isArray(g.summary) ? g.summary : [];
     return `<div class="history-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -886,6 +900,7 @@ function renderDateCards(games) {
     </div>`;
   }).join('');
 }
+
 
 // ============================================================
 // 학교급별 학년/반 드롭다운
