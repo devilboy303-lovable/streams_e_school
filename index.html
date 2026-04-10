@@ -349,7 +349,7 @@ h1,h2,h3{font-family:'Nanum Square',sans-serif;}
         <div class="panel-title">조작</div>
         <div class="control-btns">
           <button class="btn btn-red btn-lg" id="btnNext" onclick="nextNum()" style="display:none">🎲 다음 숫자</button>
-          <button class="btn btn-blue" id="btnNextRound" onclick="goNextRound()" disabled>➡ 다음 라운드</button>
+          <button class="btn btn-blue" id="btnNextRound" onclick="confirmNextRound()" disabled>➡ 다음 라운드</button>
           <button class="btn btn-white" id="btnEndGame" onclick="confirmEndGame()">🏁 게임 종료</button>
         </div>
       </div>
@@ -566,7 +566,8 @@ async function startNewGame() {
   const rounds = document.getElementById('roundCount').value;
   showLoading('게임 생성 중...');
   try {
-    const data = await api('newGame', { rounds });
+    const classInfo = getClassLabel();
+    const data = await api('newGame', { rounds, classInfo });
     state = { gameId:data.gameId, currentRound:1, totalRounds:parseInt(rounds), currentIndex:0, revealed:[], total:20, roundDone:false, status:'playing' };
     isDrawing = false;
     localStorage.setItem('streams_gameId', data.gameId);
@@ -706,11 +707,18 @@ function resetBagUI() {
   document.getElementById('bagEmoji').classList.remove('shake');
   document.getElementById('bagPopNum').textContent='';
   document.getElementById('cardStage').style.display='none';
+  document.getElementById('cardStageInner').innerHTML='';
   document.getElementById('btnNext').style.display='none';
   document.getElementById('btnNextRound').disabled=true;
   document.getElementById('btnNextRound').classList.remove('btn-pulse');
   document.getElementById('btnEndGame').classList.remove('btn-pulse-end');
   document.getElementById('scoreBanner').style.display='none';
+  // 칩 트랙 초기화
+  document.getElementById('revealedTrack').innerHTML=
+    '<div style="opacity:0.3;font-size:0.82rem;margin:auto;text-align:center;word-break:keep-all;white-space:nowrap;">첫 번째 숫자를 뽑아보세요!</div>';
+  document.getElementById('progressText').textContent='대기 중...';
+  document.getElementById('countInfo').textContent='0 / 20';
+  document.getElementById('remainCount').textContent='20';
 }
 
 // ============================================================
@@ -730,7 +738,6 @@ async function confirmNextRound() {
     state.currentIndex  = 0; state.revealed=[]; state.roundDone=false; state.total=20;
     isDrawing = false;
     resetBagUI(); renderGameUI();
-    playSound('nextRound');
     toast(`${state.currentRound}라운드 시작!`);
   } catch(e) { toast('오류: '+e.message); }
   finally { hideLoading(); }
@@ -842,11 +849,13 @@ function renderHistory(history) {
   const groups={};
   history.forEach(h=>{ if(!groups[h.date]) groups[h.date]=[]; groups[h.date].push(h); });
   const dates=Object.keys(groups).sort().reverse();
-  dl.innerHTML=dates.map((d,i)=>
-    `<div class="date-item ${i===0?'active':''}" onclick="selectDate('${d}',this)">
-       <span>📅 ${d}</span><span class="date-count">${groups[d].length}</span>
-     </div>`
-  ).join('');
+  dl.innerHTML=dates.map((d,i)=>{
+    const dt = new Date(d);
+    const label = `${dt.getMonth()+1}월 ${dt.getDate()}일`;
+    return `<div class="date-item ${i===0?'active':''}" onclick="selectDate('${d}',this)">
+       <span>📅 ${label}</span><span class="date-count">${groups[d].length}</span>
+     </div>`;
+  }).join('');
   window._hg=groups; renderDateCards(groups[dates[0]]);
 }
 function selectDate(date,el) {
@@ -855,12 +864,18 @@ function selectDate(date,el) {
 }
 function renderDateCards(games) {
   document.getElementById('historyCards').innerHTML=games.map(g=>{
-    const time=g.completedAt?new Date(g.completedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
-    const rounds=Array.isArray(g.summary)?g.summary:[];
+    const dt = g.completedAt ? new Date(g.completedAt) : null;
+    const dateStr = dt ? `${dt.getMonth()+1}월 ${dt.getDate()}일` : '';
+    const timeStr = dt ? dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '';
+    const classInfo = g.classInfo || '학급 미입력';
+    const rounds = Array.isArray(g.summary) ? g.summary : [];
     return `<div class="history-card">
-      <div class="history-card-header">
-        <span style="font-family:'Nanum Square',sans-serif;">${g.rounds}라운드 게임</span>
-        <span class="history-time">${time}</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Nanum Square',sans-serif;font-weight:800;font-size:1rem;">${classInfo}</div>
+          <div style="font-size:0.8rem;opacity:0.5;margin-top:2px;">${dateStr} ${timeStr} · ${g.rounds}라운드</div>
+        </div>
+        <div style="background:var(--red);color:white;font-family:'Nanum Square',sans-serif;font-weight:800;font-size:0.8rem;padding:4px 10px;border-radius:999px;border:2px solid var(--ink);">${g.rounds}R</div>
       </div>
       <div class="round-summary">
         ${rounds.map(r=>`<div class="round-row">
